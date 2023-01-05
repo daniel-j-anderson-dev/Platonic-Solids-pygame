@@ -58,7 +58,6 @@ class Renderer():
         while True:
             self.keys = pg.key.get_pressed()
             self.Input()
-            self.Rotate()
             self.Draw()
             self.Update()
             self.Handle_Events()
