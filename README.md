@@ -8,6 +8,7 @@ edges are pairs vertex indices
 
 All solids are controlled together
 controls:
+
             w/s: controls y-axis rotation
             a/d: controls x-axis rotation
             q/e: controls z-axis rotation
