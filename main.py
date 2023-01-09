@@ -18,9 +18,11 @@ class Renderer:
         self.delta_theta    = 5
         self.camera         = camera.Camera()
 
+
     def Platonic_Solids(self):
 
         return [shape3d.Cube([-700, -300, 0]), shape3d.Tetrahedron([-700, 300, 0]), shape3d.Dodecahedron([0,0,0]), shape3d.Icosahedron([700,-300,0]), shape3d.Octahedron([700, 300, 0])]
+
 
     def DrawPerspective(self):
 
@@ -28,11 +30,13 @@ class Renderer:
         for shape in self.shapes:
             shape.DrawPerspective(self.screen, self.camera, self.ORIGIN)
 
+
     def Draw(self):
 
         self.screen.fill(pg.Color('white'))
         for shape in self.shapes:
             shape.Draw(self.screen, self.ORIGIN)
+
 
     def Input(self):
 
@@ -58,17 +62,22 @@ class Renderer:
             if self.keys[pg.K_q]:        shape.Rotate((0,0,1),  self.delta_theta)
             if self.keys[pg.K_SPACE]:    self.Rotate()
     
+
     def Rotate(self):                   #rotates shapes along (1/sqrt(3), 1/sqrt(3), 1/sqrt(3)) = (1,1,1)/|(1,1,1)|
 
         for shape in self.shapes:
+
             shape.Rotate((0.57735026919 ,0.57735026919 ,0.57735026919 ), self.delta_theta/13)
+
 
     def Handle_Events(self):
 
         for event in pg.event.get():
+
             if event.type == pg.QUIT or self.keys[pg.K_ESCAPE]:
                 pg.quit()
                 exit()
+
 
     def Update(self):
 
