@@ -1,5 +1,5 @@
 import pygame as pg
-import shape3d
+import Shape3D
 import camera
 
 class Renderer:
@@ -17,7 +17,7 @@ class Renderer:
         self.camera         = camera.Camera()
 
     def Platonic_Solids(self):
-        return [shape3d.Cube([-700, -300, 0]), shape3d.Tetrahedron([-700, 300, 0]), shape3d.Dodecahedron([0,0,0]), shape3d.Icosahedron([700,-300,0]), shape3d.Octahedron([700, 300, 0])]
+        return [Shape3D.Cube([-700, -300, 0]), Shape3D.Tetrahedron([-700, 300, 0]), Shape3D.Dodecahedron([0,0,0]), Shape3D.Icosahedron([700,-300,0]), Shape3D.Octahedron([700, 300, 0])]
 
     def DrawPerspective(self):
         self.screen.fill(pg.Color('white'))
