@@ -106,9 +106,7 @@ class Renderer:
             self.keys = pg.key.get_pressed()
 
             if self.keys[pg.K_RETURN]:
-                is_orthographic = False
-            else:
-                is_orthographic = True
+                is_orthographic = not is_orthographic
 
             self.Input()
 
