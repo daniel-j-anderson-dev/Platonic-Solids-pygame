@@ -100,19 +100,19 @@ class Renderer:
 
     def Run(self):
 
-        isOrtho = True
+        is_orthographic = True
         while True:
 
             self.keys = pg.key.get_pressed()
 
             if self.keys[pg.K_RETURN]:
-                isOrtho = False
+                is_orthographic = False
             else:
-                isOrtho = True
+                is_orthographic = True
 
             self.Input()
 
-            if isOrtho:
+            if is_orthographic:
                 self.Draw()
             else:
                 self.DrawPerspective()
