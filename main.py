@@ -1,5 +1,5 @@
 import pygame as pg
-import Shape3D
+import shape3D
 import camera
 
 class Renderer:
