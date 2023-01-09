@@ -6,9 +6,7 @@ class Camera:
     def __init__(self):
         
         self.position = [0, 0, -150]                                # The camera is on the negative z-axis
-
-        # The camera is pointing towards the positive z-axis
-        self.direction = [0, 0, 1]
+        self.direction = [0, 0, 1]                                  # The camera is pointing towards the positive z-axis
         self.fovy = 45                                              # Y angle Field of view in degrees
         self.aspect_ratio = 1920/1080                               # HD aspect ratio
         self.dist_near = 150                                        # Distance from camera to near clipping plane
@@ -18,12 +16,11 @@ class Camera:
     # i need to convert these coords to the camera coord system
     def getProjectionMatrix(self):
 
-        # fovy to radians
-        fovy = math.radians(self.fovy)
+        fovy = math.radians(self.fovy)                              # fovy to radians
 
-        n, f = self.dist_near, self.dist_far                        # near/far planes
-        t, b = n * math.tan(fovy / 2), -n * math.tan(fovy / 2)      # top/bottom planes
-        r, l = t * self.aspect_ratio, b * self.aspect_ratio         # right/left planes
+        n, f = self.dist_near, self.dist_far                        # near/far planes distances from camera
+        t, b = n * math.tan(fovy / 2), -n * math.tan(fovy / 2)      # top/bottom planes distances from camera
+        r, l = t * self.aspect_ratio, b * self.aspect_ratio         # right/left planes distances from camera
 
         projection_matrix = np.array([
             [2*n/(r-l), 0,          (r+l)/(r-l),  0],
