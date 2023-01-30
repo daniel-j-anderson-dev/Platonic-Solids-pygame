@@ -9,25 +9,25 @@ class Shape3D:
         self.name = name
 
 class xAxis(Shape3D):
-    def __init__(self):
-        scale = 1920
-        verticies = [[-scale + 960, 540, 0], [scale + 960, 540, 0]]
+    def __init__(self, ORIGIN):
+        scale = ORIGIN[0]
+        verticies = [[-scale + ORIGIN[0], ORIGIN[1], 0], [scale + ORIGIN[0], ORIGIN[1], 0]]
         edges = [[0, 1]]
-        super().__init__(verticies, edges, "xAxis", position=[0,0,0])
+        super().__init__(verticies, edges, "xAxis", ORIGIN)
 
 class yAxis(Shape3D):
-    def __init__(self):
-        scale = 1920
-        verticies = [[960, -scale + 540, 0], [960, scale + 540, 0]]
+    def __init__(self, ORIGIN):
+        scale = ORIGIN[0]
+        verticies = [[ORIGIN[0], -scale + ORIGIN[1], 0], [ORIGIN[0], scale + ORIGIN[1], 0]]
         edges = [[0, 1]]
-        super().__init__(verticies, edges, "yAxis", position=[0,0,0])
+        super().__init__(verticies, edges, "yAxis", ORIGIN)
 
 class zAxis(Shape3D):
-    def __init__(self):
-        scale = 1920
-        verticies = [[960, 540, -scale], [960, 540, scale]]
+    def __init__(self, ORIGIN):
+        scale = ORIGIN[0]
+        verticies = [[ORIGIN[0], ORIGIN[1], -scale], [ORIGIN[0], ORIGIN[1], scale]]
         edges = [[0, 1]]
-        super().__init__(verticies, edges, "zAxis", position=[0,0,0])
+        super().__init__(verticies, edges, "zAxis", ORIGIN)
 
 class Tetrahedron(Shape3D):
     def __init__(self, position):
@@ -85,8 +85,8 @@ class Icosahedron(Shape3D):
 
 class Octahedron(Shape3D):
     def __init__(self, position):
-        vertices = [[SCALE, 0, 0], [-SCALE, 0, 0], [0, SCALE, 0],
-                    [0, -SCALE, 0], [0, 0, SCALE], [0, 0, -SCALE]]
+        vertices = [[1.5*SCALE, 0, 0], [-1.5*SCALE, 0, 0], [0, 1.5*SCALE, 0],
+                    [0, -1.5*SCALE, 0], [0, 0, 1.5*SCALE], [0, 0, -1.5*SCALE]]
         edges = [[0, 2], [0, 3], [0, 4], [0, 5], [1, 2], [1, 3],
                  [1, 4], [1, 5], [2, 4], [2, 5], [3, 4], [3, 5]]
         for vertex in vertices:

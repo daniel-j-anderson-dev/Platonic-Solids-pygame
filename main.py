@@ -1,5 +1,4 @@
 import pygame as pg
-import math
 import shape3d
 # import camera
 import quaternion
@@ -18,9 +17,9 @@ class Renderer:
         self.shapes = []
         self.keys = pg.key.get_pressed()
         self.speed = 5
-        self.delta_theta = 5
+        self.angle = 5
         # self.camera = camera.Camera(self.ORIGIN)
-        self.axes = [shape3d.xAxis(), shape3d.yAxis(), shape3d.zAxis()]
+        self.axes = [shape3d.xAxis(self.ORIGIN), shape3d.yAxis(self.ORIGIN), shape3d.zAxis(self.ORIGIN)]
         self.displaySolids = True
 
     def Platonic_Solids(self):
@@ -33,17 +32,25 @@ class Renderer:
 
     def rotate_point(self, point, axis, angle):
         
-        rotation = quaternion.Quaternion.axisAngle(axis, angle).normalize()
-        original = quaternion.Quaternion(0, point[0], point[1], point[2])
-        product  = rotation.inverse() * original * rotation
-        return [product.x, product.y, product.z]
+        rotation      = quaternion.Quaternion(axis, angle)
+        original      = quaternion.Quaternion(point[0], point[1], point[2])
+        product       = rotation.inverse() * original * rotation
+        rotated_point = [product.x, product.y, product.z]
+        return rotated_point
 
     def rotate_point_about_another(self, point, centerOfRotation, axis, angle):
 
-        rotation = quaternion.Quaternion.axisAngle(axis, angle).normalize()
-        original = quaternion.Quaternion(0, point[0] - centerOfRotation[0], point[1] - centerOfRotation[1], point[2] - centerOfRotation[2])
-        product  = rotation.inverse() * original * rotation
-        return [product.x + centerOfRotation[0], product.y + centerOfRotation[1], product.z + centerOfRotation[2]]
+        difference    = [point[0] - centerOfRotation[0],
+                         point[1] - centerOfRotation[1],
+                         point[2] - centerOfRotation[2]]
+
+        rotated_point = self.rotate_point(difference, axis, angle)
+
+        sum           = [rotated_point[0] + centerOfRotation[0],
+                         rotated_point[1] + centerOfRotation[1],
+                         rotated_point[2] + centerOfRotation[2]]
+
+        return sum
 
     def RotateShapesLocal(self, axis, angle):
 
@@ -52,16 +59,7 @@ class Renderer:
             rotated_vertices = []
             for vertex in shape.vertices:
                 
-                vertex[0] -= shape.position[0]
-                vertex[1] -= shape.position[1]  
-                vertex[2] -= shape.position[2]
-
-                rotated_vertex = self.rotate_point(vertex, axis, angle)
-
-                rotated_vertex[0] += shape.position[0]
-                rotated_vertex[1] += shape.position[1]
-                rotated_vertex[2] += shape.position[2]
-
+                rotated_vertex = self.rotate_point_about_another(vertex, shape.position, axis, angle)
                 rotated_vertices.append(rotated_vertex) 
 
             shape.vertices = rotated_vertices
@@ -129,50 +127,50 @@ class Renderer:
         if self.keys[pg.K_0]:
             self.shapes  = self.Platonic_Solids() 
 
-        if self.keys[pg.K_LEFT]:
-            self.TranslateShapes(-self.speed, 0)  # TRANSLATE
-        if self.keys[pg.K_RIGHT]:
-            self.TranslateShapes(self.speed, 0)
-        if self.keys[pg.K_DOWN]:
-            self.TranslateShapes(self.speed, 1)
-        if self.keys[pg.K_UP]:
-            self.TranslateShapes(-self.speed, 1)
-        if self.keys[pg.K_PAGEUP]:
-            self.TranslateShapes(self.speed, 2)
-        if self.keys[pg.K_PAGEDOWN]:
-            self.TranslateShapes(-self.speed, 2)
-
         if self.displaySolids:
 
+            if self.keys[pg.K_LEFT]:
+                self.TranslateShapes(-self.speed, 0)  # TRANSLATE
+            if self.keys[pg.K_RIGHT]:
+                self.TranslateShapes(self.speed, 0)
+            if self.keys[pg.K_DOWN]:
+                self.TranslateShapes(self.speed, 1)
+            if self.keys[pg.K_UP]:
+                self.TranslateShapes(-self.speed, 1)
+            if self.keys[pg.K_PAGEUP]:
+                self.TranslateShapes(self.speed, 2)
+            if self.keys[pg.K_PAGEDOWN]:
+                self.TranslateShapes(-self.speed, 2)
+    
             if not self.keys[pg.K_LSHIFT]:
                 if self.keys[pg.K_s]:
-                    self.RotateShapesLocal((1, 0, 0), -self.delta_theta)  # ROTATE
+                    self.RotateShapesLocal((1, 0, 0), -self.angle)
                 if self.keys[pg.K_w]:
-                    self.RotateShapesLocal((1, 0, 0),  self.delta_theta)
+                    self.RotateShapesLocal((1, 0, 0),  self.angle)
                 if self.keys[pg.K_d]:
-                    self.RotateShapesLocal((0, 1, 0), -self.delta_theta)
+                    self.RotateShapesLocal((0, 1, 0), -self.angle)
                 if self.keys[pg.K_a]:
-                    self.RotateShapesLocal((0, 1, 0),  self.delta_theta)
+                    self.RotateShapesLocal((0, 1, 0),  self.angle)
                 if self.keys[pg.K_e]:
-                    self.RotateShapesLocal((0, 0, 1), -self.delta_theta)
+                    self.RotateShapesLocal((0, 0, 1), -self.angle)
                 if self.keys[pg.K_q]:
-                    self.RotateShapesLocal((0, 0, 1),  self.delta_theta)
+                    self.RotateShapesLocal((0, 0, 1),  self.angle)
                 if self.keys[pg.K_SPACE]:
                     self.RotateShapesLocal((1, 1, 1), 1)
 
             else:
                 if self.keys[pg.K_s]:
-                    self.RotateShapesAboutPoint(self.ORIGIN, (1, 0, 0), -self.delta_theta)  # ROTATE
+                    self.RotateShapesAboutPoint(self.ORIGIN, (1, 0, 0), -self.angle)
                 if self.keys[pg.K_w]:
-                    self.RotateShapesAboutPoint(self.ORIGIN, (1, 0, 0),  self.delta_theta)
+                    self.RotateShapesAboutPoint(self.ORIGIN, (1, 0, 0),  self.angle)
                 if self.keys[pg.K_d]:
-                    self.RotateShapesAboutPoint(self.ORIGIN, (0, 1, 0), -self.delta_theta)
+                    self.RotateShapesAboutPoint(self.ORIGIN, (0, 1, 0), -self.angle)
                 if self.keys[pg.K_a]:
-                    self.RotateShapesAboutPoint(self.ORIGIN, (0, 1, 0),  self.delta_theta)
+                    self.RotateShapesAboutPoint(self.ORIGIN, (0, 1, 0),  self.angle)
                 if self.keys[pg.K_q]:
-                    self.RotateShapesAboutPoint(self.ORIGIN, (0, 0, 1), -self.delta_theta)
+                    self.RotateShapesAboutPoint(self.ORIGIN, (0, 0, 1), -self.angle)
                 if self.keys[pg.K_e]:
-                    self.RotateShapesAboutPoint(self.ORIGIN, (0, 0, 1),  self.delta_theta)
+                    self.RotateShapesAboutPoint(self.ORIGIN, (0, 0, 1),  self.angle)
                 if self.keys[pg.K_SPACE]:
                     self.RotateShapesAboutPoint(self.ORIGIN, (1, -1, 1), 1)
 

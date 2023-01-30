@@ -19,6 +19,6 @@ controls:
 
     up/down:    controls y position
     left/right: controls x position
-    PgUp/PGDwn: controls z position (unused in orthographic projection)
+    PgUp/PGDwn: controls z position
 
     0:          resets all shape positions and rotations
