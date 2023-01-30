@@ -112,19 +112,22 @@ class Renderer:
         
         self.DrawPoint(pg.Color('black'), self.ORIGIN)
 
+    def DrawShape(self, shape):
+
+        for edge in shape.edges:
+            start_point = (shape.vertices[edge[0]][0], shape.vertices[edge[0]][1])
+            end_point   = (shape.vertices[edge[1]][0], shape.vertices[edge[1]][1])
+
+            pg.draw.line(self.screen, pg.Color('blue'), start_point, end_point, 1)
+
+            self.DrawPoint(pg.Color('red'), start_point)
+            self.DrawPoint(pg.Color('red'), end_point)
+
     def DrawShapes(self):
 
         for shape in self.shapes:
-
-            for edge in shape.edges:
-
-                start_point = (shape.vertices[edge[0]][0], shape.vertices[edge[0]][1])
-                end_point   = (shape.vertices[edge[1]][0], shape.vertices[edge[1]][1])
-
-                pg.draw.line(self.screen, pg.Color('blue'), start_point, end_point, 1)
-
-                self.DrawPoint(pg.Color('red'), start_point)
-                self.DrawPoint(pg.Color('red'), end_point)
+            
+            self.DrawShape(shape)
 
     def HandleInput(self):
 
