@@ -78,14 +78,18 @@ class Renderer:
 
             shape.vertices = self.RotateShapeAboutPoint(shape, centerOfRotation, axis, angle)
 
+    def TranslateShape(self, shape, speed, direction):     # 0 = x, 1 = y, 2 = z
+        
+        shape.position[direction] += speed
+        for vertex in shape.vertices:
+
+            vertex[direction] += speed 
+
     def TranslateShapes(self, speed, direction):    # 0 = x, 1 = y, 2 = z
         
         for shape in self.shapes:
 
-            shape.position[direction] += speed
-            for vertex in shape.vertices:
-
-                vertex[direction] += speed     
+            self.TranslateShape(shape, speed, direction)    
 
     def DrawPoint(self, color, point):
 
