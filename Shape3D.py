@@ -10,21 +10,30 @@ class Shape3D:
 
 class xAxis(Shape3D):
     def __init__(self, ORIGIN):
-        scale = ORIGIN[0]
+        if ORIGIN[0] >= ORIGIN[1]:
+            scale = ORIGIN[0]
+        else:
+            scale = ORIGIN[1]
         verticies = [[-scale + ORIGIN[0], ORIGIN[1], 0], [scale + ORIGIN[0], ORIGIN[1], 0]]
         edges = [[0, 1]]
         super().__init__(verticies, edges, "xAxis", ORIGIN)
 
 class yAxis(Shape3D):
     def __init__(self, ORIGIN):
-        scale = ORIGIN[0]
+        if ORIGIN[0] >= ORIGIN[1]:
+            scale = ORIGIN[0]
+        else:
+            scale = ORIGIN[1]
         verticies = [[ORIGIN[0], -scale + ORIGIN[1], 0], [ORIGIN[0], scale + ORIGIN[1], 0]]
         edges = [[0, 1]]
         super().__init__(verticies, edges, "yAxis", ORIGIN)
 
 class zAxis(Shape3D):
     def __init__(self, ORIGIN):
-        scale = ORIGIN[0]
+        if ORIGIN[0] >= ORIGIN[1]:
+            scale = ORIGIN[0]
+        else:
+            scale = ORIGIN[1]
         verticies = [[ORIGIN[0], ORIGIN[1], -scale], [ORIGIN[0], ORIGIN[1], scale]]
         edges = [[0, 1]]
         super().__init__(verticies, edges, "zAxis", ORIGIN)
