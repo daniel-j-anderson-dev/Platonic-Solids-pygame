@@ -1,7 +1,8 @@
 import pygame as pg
 import math
 import shape3d
-import camera
+# import camera
+import quaternion
 
 
 class Renderer:
@@ -10,7 +11,7 @@ class Renderer:
 
         pg.init()
         self.WINDOW_SIZE = (1920, 1080)
-        self.ORIGIN = [self.WINDOW_SIZE[0]//2, self.WINDOW_SIZE[1]//2, 0]
+        self.ORIGIN = (self.WINDOW_SIZE[0]//2, self.WINDOW_SIZE[1]//2, 0)
         self.FPS = 60
         self.screen = pg.display.set_mode(self.WINDOW_SIZE)
         self.clock = pg.time.Clock()
@@ -18,88 +19,115 @@ class Renderer:
         self.keys = pg.key.get_pressed()
         self.speed = 5
         self.delta_theta = 5
-        self.camera = camera.Camera()
+        # self.camera = camera.Camera(self.ORIGIN)
+        self.axes = [shape3d.xAxis(), shape3d.yAxis(), shape3d.zAxis()]
+        self.displaySolids = True
 
     def Platonic_Solids(self):
 
-        return [shape3d.Cube([-700, -300, 0]), shape3d.Tetrahedron([-700, 300, 0]), shape3d.Dodecahedron([0, 0, 0]), shape3d.Icosahedron([700, -300, 0]), shape3d.Octahedron([700, 300, 0])]
+        return [shape3d.Cube        ([-700 + self.ORIGIN[0], -300 + self.ORIGIN[1], 0]),
+                shape3d.Tetrahedron ([-700 + self.ORIGIN[0],  300 + self.ORIGIN[1], 0]),
+                shape3d.Dodecahedron([   0 + self.ORIGIN[0],    0 + self.ORIGIN[1], 0]),
+                shape3d.Icosahedron ([ 700 + self.ORIGIN[0], -300 + self.ORIGIN[1], 0]),
+                shape3d.Octahedron  ([ 700 + self.ORIGIN[0],  300 + self.ORIGIN[1], 0])]
 
     def rotate_point(self, point, axis, angle):
-
-        angle = math.radians(angle)
-        x, y, z = point[0], point[1], point[2]
-        a, b, c, d = 1 * math.cos(angle/2), axis[0] * math.sin(
-            angle/2), axis[1] * math.sin(angle/2), axis[2] * math.sin(angle/2)
-        norm = math.sqrt(a*a + b*b + c*c + d*d)
-        a /= norm
-        b /= norm
-        c /= norm
-        d /= norm
-        rotatedpoint = [(x*(1 - 2*c**2 - 2*d**2) + y*(2*b*c - 2*d*a) + z*(2*b*d + 2*c*a)),
-                        (x*(2*b * c + 2*d*a) + y*(1 - 2*b**2 - 2*d**2) + z*(2*c*d - 2*b*a)),
-                        (x*(2*b * d - 2*c*a) + y*(2*c*d + 2*b*a) + z*(1 - 2*b**2 - 2*c**2))]
-        return rotatedpoint
+        
+        rotation = quaternion.Quaternion.axisAngle(axis, angle).normalize()
+        original = quaternion.Quaternion(0, point[0], point[1], point[2])
+        product  = rotation.inverse() * original * rotation
+        return [product.x, product.y, product.z]
 
     def rotate_point_about_another(self, point, centerOfRotation, axis, angle):
 
-        angle = math.radians(angle)
-        x, y, z = point[0] - centerOfRotation[0], point[1] - centerOfRotation[1], point[2] - centerOfRotation[2]
-        a, b, c, d = 1 * math.cos(angle/2), axis[0] * math.sin(
-            angle/2), axis[1] * math.sin(angle/2), axis[2] * math.sin(angle/2)
-        norm = math.sqrt(a*a + b*b + c*c + d*d)
-        a /= norm
-        b /= norm
-        c /= norm
-        d /= norm
-        rotatedpoint = [(x*(1 - 2*c**2 - 2*d**2) + y*(2*b*c - 2*d*a) + z*(2*b*d + 2*c*a)) + centerOfRotation[0],
-                        (x*(2*b * c + 2*d*a) + y*(1 - 2*b**2 - 2*d**2) + z*(2*c*d - 2*b*a)) + centerOfRotation[1],
-                        (x*(2*b * d - 2*c*a) + y*(2*c*d + 2*b*a) + z*(1 - 2*b**2 - 2*c**2)) + centerOfRotation[2]]
-        return rotatedpoint
-
-    def RotateShapes(self, axis, angle):
-
-        for shape in self.shapes:
-            rotated_vertices = []
-            for vertex in shape.vertices:
-                rotated_vertices.append(self.rotate_point(vertex, axis, angle))
-            shape.vertices = rotated_vertices
+        rotation = quaternion.Quaternion.axisAngle(axis, angle).normalize()
+        original = quaternion.Quaternion(0, point[0] - centerOfRotation[0], point[1] - centerOfRotation[1], point[2] - centerOfRotation[2])
+        product  = rotation.inverse() * original * rotation
+        return [product.x + centerOfRotation[0], product.y + centerOfRotation[1], product.z + centerOfRotation[2]]
 
     def RotateShapesLocal(self, axis, angle):
 
         for shape in self.shapes:
+
             rotated_vertices = []
             for vertex in shape.vertices:
-                rotated_vertices.append(self.rotate_point_about_another(vertex, shape.position, axis, angle))
+                
+                vertex[0] -= shape.position[0]
+                vertex[1] -= shape.position[1]  
+                vertex[2] -= shape.position[2]
+
+                rotated_vertex = self.rotate_point(vertex, axis, angle)
+
+                rotated_vertex[0] += shape.position[0]
+                rotated_vertex[1] += shape.position[1]
+                rotated_vertex[2] += shape.position[2]
+
+                rotated_vertices.append(rotated_vertex) 
+
+            shape.vertices = rotated_vertices
+
+    def RotateShapesAboutPoint(self, centerOfRotation, axis, angle):
+ 
+        for shape in self.shapes:
+
+            rotated_vertices = []
+            for vertex in shape.vertices:
+
+                rotated_vertex = self.rotate_point_about_another(vertex, centerOfRotation, axis, angle)
+                rotated_vertices.append(rotated_vertex)
+
+            shape.position = self.rotate_point_about_another(shape.position, centerOfRotation, axis, angle)
             shape.vertices = rotated_vertices
 
     def TranslateShapes(self, speed, index):
+        
         for shape in self.shapes:
+
+            for vertex in shape.vertices:
+
+                vertex[index] += speed  
+                
             shape.position[index] += speed
+
+    def DrawPoint(self, color, point):
+
+        pg.draw.circle(self.screen, color, (point[0], point[1]), 5)
+
+    def ClearScreen(self):
+
+        self.screen.fill(pg.Color('white'))
+
+    def DrawAxes(self):
+
+        for axis in self.axes:
+
+            for edge in axis.edges:
+
+                start_point = (axis.vertices[edge[0]][0], axis.vertices[edge[0]][1])
+                end_point   = (axis.vertices[edge[1]][0], axis.vertices[edge[1]][1])
+
+                pg.draw.line(self.screen, pg.Color('black'), start_point, end_point, 1)
 
     def DrawShapes(self):
 
-        self.screen.fill(pg.Color('white'))
         for shape in self.shapes:
-            for edge in shape.edges:
-                start_point = ((shape.position[0] + shape.vertices[edge[0]][0] + self.ORIGIN[0]),
-                               (shape.position[1] - shape.vertices[edge[0]][1] + self.ORIGIN[1]))
-                end_point   = ((shape.position[0] + shape.vertices[edge[1]][0] + self.ORIGIN[0]),
-                               (shape.position[1] - shape.vertices[edge[1]][1] + self.ORIGIN[1]))
-                pg.draw.line(self.screen, [0, 0, 0], start_point, end_point, 1)
 
+            for edge in shape.edges:
+
+                start_point = (shape.vertices[edge[0]][0], shape.vertices[edge[0]][1])
+                end_point   = (shape.vertices[edge[1]][0], shape.vertices[edge[1]][1])
+
+                pg.draw.line(self.screen, pg.Color('black'), start_point, end_point, 1)
+
+                self.DrawPoint(pg.Color('red'), start_point)
+                self.DrawPoint(pg.Color('red'), end_point)
 
     def Input(self):
 
-        if self.keys[pg.K_i]:
-            self.camera.position[0] += self.speed
-        if self.keys[pg.K_k]:
-            self.camera.position[0] -= self.speed
-        if self.keys[pg.K_j]:
-            self.camera.position[1] += self.speed
-        if self.keys[pg.K_l]:
-            self.camera.position[1] -= self.speed
+        if self.keys[pg.K_RSHIFT]:
+            self.displaySolids = not self.displaySolids
         if self.keys[pg.K_0]:
-            self.shapes = self.Platonic_Solids()                    # reset angles and pos
+            self.shapes  = self.Platonic_Solids() 
 
         if self.keys[pg.K_LEFT]:
             self.TranslateShapes(-self.speed, 0)  # TRANSLATE
@@ -114,37 +142,42 @@ class Renderer:
         if self.keys[pg.K_PAGEDOWN]:
             self.TranslateShapes(-self.speed, 2)
 
-        if not self.keys[pg.K_LSHIFT]:
-            if self.keys[pg.K_s]:
-                self.RotateShapes((1, 0, 0), -self.delta_theta)  # ROTATE
-            if self.keys[pg.K_w]:
-                self.RotateShapes((1, 0, 0),  self.delta_theta)
-            if self.keys[pg.K_d]:
-                self.RotateShapes((0, 1, 0), -self.delta_theta)
-            if self.keys[pg.K_a]:
-                self.RotateShapes((0, 1, 0),  self.delta_theta)
-            if self.keys[pg.K_e]:
-                self.RotateShapes((0, 0, 1), -self.delta_theta)
-            if self.keys[pg.K_q]:
-                self.RotateShapes((0, 0, 1),  self.delta_theta)
-            if self.keys[pg.K_SPACE]:
-                self.RotateShapes((1/math.sqrt(3), 1/math.sqrt(3), 1/math.sqrt(3)), self.delta_theta)
+        if self.displaySolids:
 
-        else:
-            if self.keys[pg.K_s]:
-                self.RotateShapesLocal((1, 0, 0), -self.delta_theta)  # ROTATE
-            if self.keys[pg.K_w]:
-                self.RotateShapesLocal((1, 0, 0),  self.delta_theta)
-            if self.keys[pg.K_d]:
-                self.RotateShapesLocal((0, 1, 0), -self.delta_theta)
-            if self.keys[pg.K_a]:
-                self.RotateShapesLocal((0, 1, 0),  self.delta_theta)
-            if self.keys[pg.K_e]:
-                self.RotateShapesLocal((0, 0, 1), -self.delta_theta)
-            if self.keys[pg.K_q]:
-                self.RotateShapesLocal((0, 0, 1),  self.delta_theta)
-            if self.keys[pg.K_SPACE]:
-                self.RotateShapesLocal((1/math.sqrt(3), 1/math.sqrt(3), 1/math.sqrt(3)), self.delta_theta)
+            if not self.keys[pg.K_LSHIFT]:
+                if self.keys[pg.K_s]:
+                    self.RotateShapesLocal((1, 0, 0), -self.delta_theta)  # ROTATE
+                if self.keys[pg.K_w]:
+                    self.RotateShapesLocal((1, 0, 0),  self.delta_theta)
+                if self.keys[pg.K_d]:
+                    self.RotateShapesLocal((0, 1, 0), -self.delta_theta)
+                if self.keys[pg.K_a]:
+                    self.RotateShapesLocal((0, 1, 0),  self.delta_theta)
+                if self.keys[pg.K_e]:
+                    self.RotateShapesLocal((0, 0, 1), -self.delta_theta)
+                if self.keys[pg.K_q]:
+                    self.RotateShapesLocal((0, 0, 1),  self.delta_theta)
+                if self.keys[pg.K_SPACE]:
+                    self.RotateShapesLocal((1, 1, 1), 1)
+
+            else:
+                if self.keys[pg.K_s]:
+                    self.RotateShapesAboutPoint(self.ORIGIN, (1, 0, 0), -self.delta_theta)  # ROTATE
+                if self.keys[pg.K_w]:
+                    self.RotateShapesAboutPoint(self.ORIGIN, (1, 0, 0),  self.delta_theta)
+                if self.keys[pg.K_d]:
+                    self.RotateShapesAboutPoint(self.ORIGIN, (0, 1, 0), -self.delta_theta)
+                if self.keys[pg.K_a]:
+                    self.RotateShapesAboutPoint(self.ORIGIN, (0, 1, 0),  self.delta_theta)
+                if self.keys[pg.K_q]:
+                    self.RotateShapesAboutPoint(self.ORIGIN, (0, 0, 1), -self.delta_theta)
+                if self.keys[pg.K_e]:
+                    self.RotateShapesAboutPoint(self.ORIGIN, (0, 0, 1),  self.delta_theta)
+                if self.keys[pg.K_SPACE]:
+                    self.RotateShapesAboutPoint(self.ORIGIN, (1, -1, 1), 1)
+
+                
+
 
     def Handle_Events(self):
 
@@ -160,12 +193,18 @@ class Renderer:
         self.clock.tick(self.FPS)
 
     def Run(self):
-
+        
         while True:
 
             self.keys = pg.key.get_pressed()
             self.Input()
-            self.DrawShapes()
+            self.ClearScreen()
+            self.DrawPoint(pg.Color('black'), self.ORIGIN)
+            self.DrawAxes()
+
+            if self.displaySolids:
+                self.DrawShapes()
+
             self.Update()
             self.Handle_Events()
 
