@@ -122,14 +122,14 @@ class Renderer:
         
         for i in range(0, len(segments) - 1, 2):
 
-                pg.draw.line(self.screen, color, segments[i], segments[i + 1], 1)
+                pg.draw.line(self.screen, color, segments[i], segments[i + 1], 8)
 
     def ClearScreen(self):
 
         square_size = 50
 
         # Set the colors for the squares
-        color1 = pg.Color('black')
+        color1 = pg.Color('darkgray')
         color2 = pg.Color('gray')
 
         # Fill the screen with the checkerboard pattern
@@ -159,8 +159,8 @@ class Renderer:
                 startPoint = (axis.vertices[edge[0]][0], axis.vertices[edge[0]][1])
                 endPoint   = (axis.vertices[edge[1]][0], axis.vertices[edge[1]][1])
 
-                pg.draw.line(self.screen, color, startPoint, endPoint, 8)
-                # self.DrawDashedLine(color, startPoint, endPoint, 10)
+                #pg.draw.line(self.screen, color, startPoint, endPoint, 8)
+                self.DrawDashedLine(color, startPoint, endPoint, 10)
         
         self.DrawPoint(pg.Color('black'), self.ORIGIN)
 
