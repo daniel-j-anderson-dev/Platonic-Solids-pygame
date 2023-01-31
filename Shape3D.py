@@ -1,5 +1,5 @@
 PHI   = 1.61803398875
-SCALE = 100
+SCALE = 50
 
 class Shape3D:
     def __init__(self, vertices, edges, name, position):
