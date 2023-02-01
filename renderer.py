@@ -8,15 +8,16 @@ class Renderer:
     def __init__(self, window_width, window_height):
 
         pg.init()
-        self.ORIGIN      = (window_width//2, window_height//2, 0)
-        self.FPS         = 60
-        self.screen      = pg.display.set_mode((window_width, window_height))
-        self.clock       = pg.time.Clock()
-        self.keys        = pg.key.get_pressed()
-        self.shapes      = []
-        self.axes        = self.Axes()
-        self.speed       = 5
-        self.angle       = 1
+        self.ORIGIN           = (window_width//2, window_height//2, 0)
+        self.FPS              = 60
+        self.screen           = pg.display.set_mode((window_width, window_height))
+        self.clock            = pg.time.Clock()
+        self.keys             = pg.key.get_pressed()
+        self.shapes           = []
+        self.axes             = self.Axes()
+        self.speed            = 5
+        self.angle            = 1
+        self.worldOrientation = quaternion.Quaternion((0, 0, 1), 360)
 
     def Axes(self):
         return [shape3d.xAxis(self.ORIGIN),
@@ -122,7 +123,7 @@ class Renderer:
         
         for i in range(0, len(segments) - 1, 2):
 
-                pg.draw.line(self.screen, color, segments[i], segments[i + 1], 8)
+                pg.draw.line(self.screen, color, segments[i], segments[i + 1], 5)
 
     def ClearScreen(self):
 
@@ -147,20 +148,26 @@ class Renderer:
         for axis in self.axes:
 
             if  axis.name == 'xAxis':
-                color = pg.Color('white')
+                color = pg.Color('red')
             elif axis.name == 'yAxis':
-                color = pg.Color('pink')
+                color = pg.Color('green')
             elif axis.name == 'zAxis':
-                color = pg.Color('purple')
-
+                color = pg.Color('blue')
 
             for edge in axis.edges:
 
                 startPoint = (axis.vertices[edge[0]][0], axis.vertices[edge[0]][1])
                 endPoint   = (axis.vertices[edge[1]][0], axis.vertices[edge[1]][1])
 
-                #pg.draw.line(self.screen, color, startPoint, endPoint, 8)
-                self.DrawDashedLine(color, startPoint, endPoint, 10)
+
+
+                if edge[1] == 2:
+                    
+                    self.DrawDashedLine(color, startPoint, endPoint, 10)
+                else:
+
+                    pg.draw.line(self.screen, color, startPoint, endPoint, 5)
+                    
         
         self.DrawPoint(pg.Color('black'), self.ORIGIN)
 
@@ -170,10 +177,10 @@ class Renderer:
             startPoint = (shape.vertices[edge[0]][0], shape.vertices[edge[0]][1])
             endPoint   = (shape.vertices[edge[1]][0], shape.vertices[edge[1]][1])
 
-            pg.draw.line(self.screen, pg.Color('green'), startPoint, endPoint, 5)
+            pg.draw.line(self.screen, pg.Color('white'), startPoint, endPoint, 5)
 
-            self.DrawPoint(pg.Color('red'), startPoint)
-            self.DrawPoint(pg.Color('red'), endPoint)
+            self.DrawPoint(pg.Color('black'), startPoint)
+            self.DrawPoint(pg.Color('black'), endPoint)
 
     def DrawShapes(self):
 

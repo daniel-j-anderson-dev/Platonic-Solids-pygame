@@ -6,7 +6,7 @@ class Quaternion:
         
         # __init__(self, q) copy contructor
         if len(args) == 1:
-            q = args[0]
+            q      = args[0]
             self.w = q.w
             self.x = q.x
             self.y = q.y
@@ -14,12 +14,12 @@ class Quaternion:
 
         # __init__(self, axis, angle) axis angle -> quat
         elif len(args) == 2:
-            angle       = math.radians(args[1])
-            axis        = args[0]
-            self.w      =       1 * math.cos(angle/2)
-            self.x      = axis[0] * math.sin(angle/2)
-            self.y      = axis[1] * math.sin(angle/2)
-            self.z      = axis[2] * math.sin(angle/2)
+            angle  = math.radians(args[1])
+            axis   = args[0]
+            self.w =       1 * math.cos(angle/2)
+            self.x = axis[0] * math.sin(angle/2)
+            self.y = axis[1] * math.sin(angle/2)
+            self.z = axis[2] * math.sin(angle/2)
 
         # __init__(self, x, y, z) point -> quat
         elif len(args) == 3:
@@ -52,10 +52,9 @@ class Quaternion:
         return Quaternion(self.w, -self.x, -self.y, -self.z)
 
     def inverse(self):
-        return Quaternion(self.conjugate().w / (self.norm() * self.norm()),
-                          self.conjugate().x / (self.norm() * self.norm()),
-                          self.conjugate().y / (self.norm() * self.norm()),
-                          self.conjugate().z / (self.norm() * self.norm()))
+        conjugate = self.conjugate()
+        norm2     = self.norm() * self.norm()
+        return Quaternion(conjugate.w/norm2, conjugate.x/norm2, conjugate.y/norm2, conjugate.z/norm2)
 
     def __mul__(self, other):
         return Quaternion(self.w*other.w - self.x*other.x - self.y*other.y - self.z*other.z,

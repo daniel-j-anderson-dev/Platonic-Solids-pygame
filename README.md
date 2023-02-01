@@ -2,11 +2,18 @@
 Render and manipulate orthographic 3D wireframe objects
 
 rotations are calculated using quaterions
+translations are not handled properly yet
+    (translations are relative to the screen instead of the axes)
 
 vertices are lists of 3 numbers
 edges are pairs vertex indices 
 
 All solids are controlled together
+
+positive half axis is dashed
+x-axis is red
+y-axis is green
+z-axis is blue
 
 controls:
 

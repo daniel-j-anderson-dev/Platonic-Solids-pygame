@@ -14,8 +14,8 @@ class xAxis(Shape3D):
             scale = ORIGIN[0]
         else:
             scale = ORIGIN[1]
-        verticies = [[-scale + ORIGIN[0], ORIGIN[1], 0], [scale + ORIGIN[0], ORIGIN[1], 0]]
-        edges = [[0, 1]]
+        verticies = [[-scale + ORIGIN[0], ORIGIN[1], 0], [ORIGIN[0], ORIGIN[1], ORIGIN[2]], [scale + ORIGIN[0], ORIGIN[1], 0]]
+        edges = [[0, 1], [1, 2]]
         super().__init__(verticies, edges, "xAxis", ORIGIN)
 
 class yAxis(Shape3D):
@@ -24,8 +24,8 @@ class yAxis(Shape3D):
             scale = ORIGIN[0]
         else:
             scale = ORIGIN[1]
-        verticies = [[ORIGIN[0], -scale + ORIGIN[1], 0], [ORIGIN[0], scale + ORIGIN[1], 0]]
-        edges = [[0, 1]]
+        verticies = [[ORIGIN[0], -scale + ORIGIN[1], 0], [ORIGIN[0], ORIGIN[1], ORIGIN[2]], [ORIGIN[0], scale + ORIGIN[1], 0]]
+        edges = [[0, 1], [1, 2]]
         super().__init__(verticies, edges, "yAxis", ORIGIN)
 
 class zAxis(Shape3D):
@@ -34,8 +34,8 @@ class zAxis(Shape3D):
             scale = ORIGIN[0]
         else:
             scale = ORIGIN[1]
-        verticies = [[ORIGIN[0], ORIGIN[1], -scale], [ORIGIN[0], ORIGIN[1], scale]]
-        edges = [[0, 1]]
+        verticies = [[ORIGIN[0], ORIGIN[1], -scale], [ORIGIN[0], ORIGIN[1], ORIGIN[2]], [ORIGIN[0], ORIGIN[1], scale]]
+        edges = [[0, 1], [1, 2]]
         super().__init__(verticies, edges, "zAxis", ORIGIN)
 
 class Tetrahedron(Shape3D):
