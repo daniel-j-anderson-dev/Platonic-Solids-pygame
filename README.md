@@ -10,7 +10,7 @@ edges are pairs vertex indices
 
 All solids are controlled together
 
-positive half axis is dashed
+negative half axis is dashed
 x-axis is red
 y-axis is green
 z-axis is blue

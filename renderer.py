@@ -80,29 +80,41 @@ class Renderer:
 
             shape.vertices = self.RotateShapeAboutPoint(shape, centerOfRotation, axis, angle)
 
-    def RotateAxes(self, centerOfRotation, axis, angle):
+    def RotateAxes(self, axis, angle):
 
         for shape in self.axes:
 
             shape.vertices = self.RotateShapeLocal(shape, axis, angle)
 
+    def MoveShapeX(self):
+
+        for shape in self.shapes:
+
+            self.axes[0].vertices[0]
+
     # Make this relative to axis not relative to screen
-    def TranslateShape(self, shape, axis):     # 0 = x, 1 = y, 2 = z
+    def TranslateShape(self, shape, axis, distance):     # 0 = x, 1 = y, 2 = z
         
-        shape.position[0] += axis[0]
-        shape.position[1] += axis[1]
-        shape.position[2] += axis[2]
+        norm = math.sqrt(axis[0]*axis[0] + axis[1]*axis[1] + axis[1]*axis[1])
+        newAxis = [(axis[0]/norm)*distance,
+                   (axis[1]/norm)*distance,
+                   (axis[2]/norm)*distance]
+
+        shape.position[0] += newAxis[0]
+        shape.position[1] += newAxis[1]
+        shape.position[2] += newAxis[2]
+
         for vertex in shape.vertices:
 
-            vertex[0] += axis[0]
-            vertex[1] += axis[1] 
-            vertex[2] += axis[2] 
+            vertex[0] += newAxis[0]
+            vertex[1] += newAxis[1]
+            vertex[2] += newAxis[2]
 
-    def TranslateShapes(self, axis):
+    def TranslateShapes(self, axis, distance):
         
         for shape in self.shapes:
 
-            self.TranslateShape(shape, axis)    
+            self.TranslateShape(shape, axis, distance)    
 
     def DrawPoint(self, color, point):
 
@@ -127,21 +139,23 @@ class Renderer:
 
     def ClearScreen(self):
 
-        square_size = 50
-
-        # Set the colors for the squares
-        color1 = pg.Color('darkgray')
-        color2 = pg.Color('gray')
+        square_size = 24
 
         # Fill the screen with the checkerboard pattern
         for row in range(0, self.screen.get_height(), square_size):
+
             for col in range(0, self.screen.get_width(), square_size):
+
                 if (row + col) % (2 * square_size) < square_size:
-                    color = color1
+
+                    color = pg.Color('darkgray')
+
                 else:
-                    color = color2
+
+                    color = pg.Color('gray')
+
+                # self.screen.fill(pg.Color('white'))
                 pg.draw.rect(self.screen, color, pg.Rect(col, row, square_size, square_size))
-        # self.screen.fill(pg.Color('white'))
 
     def DrawAxes(self):
 
@@ -158,8 +172,6 @@ class Renderer:
 
                 startPoint = (axis.vertices[edge[0]][0], axis.vertices[edge[0]][1])
                 endPoint   = (axis.vertices[edge[1]][0], axis.vertices[edge[1]][1])
-
-
 
                 if edge[1] == 2:
                     
@@ -194,18 +206,22 @@ class Renderer:
             self.shapes = self.Platonic_Solids()
             self.axes   = self.Axes() 
 
+        xAxis = (1,0,0)
+        yAxis = (0,1,0)
+        zAxis = (0,0,1)
+
         if self.keys[pg.K_LEFT]:
-            self.TranslateShapes((-self.speed, 0, 0))  # TRANSLATE
+            self.TranslateShapes(xAxis, -self.speed)  # TRANSLATE
         if self.keys[pg.K_RIGHT]:
-            self.TranslateShapes(( self.speed, 0, 0))
+            self.TranslateShapes(xAxis,  self.speed)
         if self.keys[pg.K_DOWN]:
-            self.TranslateShapes((0,  self.speed, 0))
+            self.TranslateShapes(yAxis,  self.speed)
         if self.keys[pg.K_UP]:
-            self.TranslateShapes((0, -self.speed, 0))
+            self.TranslateShapes(yAxis, -self.speed)
         if self.keys[pg.K_PAGEUP]:
-            self.TranslateShapes((0, 0,  self.speed))
+            self.TranslateShapes(zAxis, -self.speed)
         if self.keys[pg.K_PAGEDOWN]:
-            self.TranslateShapes((0, 0, -self.speed))
+            self.TranslateShapes(zAxis,  self.speed)
 
         if not self.keys[pg.K_LSHIFT]:
             if self.keys[pg.K_s]:
@@ -226,25 +242,25 @@ class Renderer:
         else:
             if self.keys[pg.K_w]:
                 self.RotateShapesAboutPoint(self.ORIGIN, (1, 0, 0), -self.angle)
-                self.RotateAxes(self.ORIGIN, (1, 0, 0), -self.angle)
+                self.RotateAxes((1, 0, 0), -self.angle)
             if self.keys[pg.K_s]:
                 self.RotateShapesAboutPoint(self.ORIGIN, (1, 0, 0),  self.angle)
-                self.RotateAxes(self.ORIGIN, (1, 0, 0), self.angle)
+                self.RotateAxes((1, 0, 0), self.angle)
             if self.keys[pg.K_d]:
                 self.RotateShapesAboutPoint(self.ORIGIN, (0, 1, 0), -self.angle)
-                self.RotateAxes(self.ORIGIN, (0, 1, 0), -self.angle)
+                self.RotateAxes((0, 1, 0), -self.angle)
             if self.keys[pg.K_a]:
                 self.RotateShapesAboutPoint(self.ORIGIN, (0, 1, 0),  self.angle)
-                self.RotateAxes(self.ORIGIN, (0, 1, 0),  self.angle)
+                self.RotateAxes((0, 1, 0),  self.angle)
             if self.keys[pg.K_q]:
                 self.RotateShapesAboutPoint(self.ORIGIN, (0, 0, 1), -self.angle)
-                self.RotateAxes(self.ORIGIN, (0, 0, 1), -self.angle)
+                self.RotateAxes((0, 0, 1), -self.angle)
             if self.keys[pg.K_e]:
                 self.RotateShapesAboutPoint(self.ORIGIN, (0, 0, 1),  self.angle)
-                self.RotateAxes(self.ORIGIN, (0, 0, 1),  self.angle)
+                self.RotateAxes((0, 0, 1),  self.angle)
             if self.keys[pg.K_SPACE]:
                 self.RotateShapesAboutPoint(self.ORIGIN, (1, -1, 1), 1)
-                self.RotateAxes(self.ORIGIN, (1, -1, 1), 1)
+                self.RotateAxes((1, -1, 1), 1)
 
     def HandleEvents(self):
 
