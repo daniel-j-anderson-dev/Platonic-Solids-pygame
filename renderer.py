@@ -8,6 +8,8 @@ class Renderer:
     def __init__(self, window_width, window_height):
 
         pg.init()
+        self.window_width     = window_width
+        self.window_height    = window_height
         self.ORIGIN           = (window_width//2, window_height//2, 0)
         self.FPS              = 60
         self.screen           = pg.display.set_mode((window_width, window_height))
@@ -17,10 +19,15 @@ class Renderer:
         self.axes             = self.Axes()
         self.speed            = 5
         self.angle            = 1
-        self.worldOrientation = quaternion.Quaternion((0, 0, 1), 360)
 
     def Axes(self):
-        return [shape3d.xAxis(), shape3d.yAxis(), shape3d.zAxis()]
+        if self.window_width > self.window_height:
+
+            return [shape3d.xAxis(self.window_width),  shape3d.yAxis(self.window_width),  shape3d.zAxis(self.window_width)]
+        
+        else:
+
+            return [shape3d.xAxis(self.window_height), shape3d.yAxis(self.window_height), shape3d.zAxis(self.window_height)]
 
     def PlatonicSolids(self):
 
@@ -38,13 +45,6 @@ class Renderer:
         rotatedPoint = [product.x, product.y, product.z]
         return rotatedPoint
 
-    def RotatePointAboutAnother(self, point, centerOfRotation, axis, angle):
-
-        difference    = [point[0] - centerOfRotation[0], point[1] - centerOfRotation[1], point[2] - centerOfRotation[2]]
-        rotatedPoint = self.RotatePoint(difference, axis, angle)
-        sum           = [rotatedPoint[0] + centerOfRotation[0], rotatedPoint[1] + centerOfRotation[1], rotatedPoint[2] + centerOfRotation[2]]
-        return sum
-
     def RotateShapeLocal(self, shape, axis, angle):
 
         rotatedVertices = []
@@ -54,6 +54,19 @@ class Renderer:
             rotatedVertices.append(rotatedVertex) 
 
         return rotatedVertices
+
+    def RotateShapesLocal(self, axis, angle):
+
+        for shape in self.shapes:
+
+            shape.vertices = self.RotateShapeLocal(shape, axis, angle)
+
+    def RotatePointAboutAnother(self, point, centerOfRotation, axis, angle):
+
+        difference    = [point[0] - centerOfRotation[0], point[1] - centerOfRotation[1], point[2] - centerOfRotation[2]]
+        rotatedPoint = self.RotatePoint(difference, axis, angle)
+        sum           = [rotatedPoint[0] + centerOfRotation[0], rotatedPoint[1] + centerOfRotation[1], rotatedPoint[2] + centerOfRotation[2]]
+        return sum
 
     def RotateShapeAboutPoint(self, shape, centerOfRotation, axis, angle):
 
@@ -65,12 +78,6 @@ class Renderer:
 
         shape.position = self.RotatePointAboutAnother(shape.position, centerOfRotation, axis, angle)
         return rotatedVertices
-
-    def RotateShapesLocal(self, axis, angle):
-
-        for shape in self.shapes:
-
-            shape.vertices = self.RotateShapeLocal(shape, axis, angle)
 
     def RotateShapesAboutPoint(self, centerOfRotation, axis, angle):
  
@@ -85,37 +92,27 @@ class Renderer:
             shape.vertices = self.RotateShapeLocal(shape, axis, angle)
 
     # Make this relative to axis not relative to screen
-    def TranslatPoint(self, point, axis):
+    def TranslatePoint(self, point, axis, distance):
 
-        _X_ = axis[0]
-        _Y_ = axis[1]
-        _Z_ = axis[2]
-        x   = point[0]
-        y   = point[1]
-        z   = point[2]
+        norm            = math.sqrt(axis[0]*axis[0] + axis[1]*axis[1] + axis[2]*axis[2])
+        newAxis         = [distance*(axis[0]/norm), distance*(axis[1]/norm), distance*(axis[2]/norm)]
+        translatedPoint = [point[0] + newAxis[0], point[1] + newAxis[1], point[2] + newAxis[2]]
+        return translatedPoint
         
     def TranslateShape(self, shape, axis, distance):     # 0 = x, 1 = y, 2 = z
-        
-        norm = math.sqrt(axis[0]*axis[0] + axis[1]*axis[1] + axis[2]*axis[2])
-        newAxis = [(axis[0]/norm)*distance,
-                   (axis[1]/norm)*distance,
-                   (axis[2]/norm)*distance]
 
-        shape.position = self.TranslatPoint(shape.position, newAxis)
+
+        shape.position = self.TranslatePoint(shape.position, axis, distance)
 
         for vertex in shape.vertices:
 
-            vertex = self.TranslatPoint(vertex, newAxis)
+            vertex = self.TranslatePoint(vertex, axis, distance)
 
     def TranslateShapes(self, axis, distance):
         
         for shape in self.shapes:
 
             self.TranslateShape(shape, axis, distance)    
-
-    def DrawPoint(self, color, point):
-
-        pg.draw.circle(self.screen, color, (point[0], point[1]), 5)
 
     def DrawDashedLine(self, color, startPoint, endPoint, dashLength):
 
@@ -155,6 +152,33 @@ class Renderer:
 
                 pg.draw.rect(self.screen, color, pg.Rect(col, row, squareSize, squareSize))
 
+    def DrawPoint(self, color, point):
+
+        pg.draw.circle(self.screen, color, (point[0], point[1]), 5)
+
+    def DrawEdge(self, edgeColor, vertexColor, startPoint, endPoint):
+
+        pg.draw.line(self.screen, edgeColor, startPoint, endPoint, 5)
+
+        self.DrawPoint(vertexColor, startPoint)
+        self.DrawPoint(vertexColor, endPoint)
+
+    def DrawShape(self, shape):
+
+        edgeColor   = pg.Color('white')
+        vertexColor = pg.Color('black')
+        for edge in shape.edges:
+            startPoint = (shape.vertices[edge[0]][0] + self.ORIGIN[0], shape.vertices[edge[0]][1] + self.ORIGIN[1])
+            endPoint   = (shape.vertices[edge[1]][0] + self.ORIGIN[0], shape.vertices[edge[1]][1] + self.ORIGIN[1])
+
+            self.DrawEdge(edgeColor, vertexColor, startPoint, endPoint)
+
+    def DrawShapes(self):
+
+        for shape in self.shapes:
+            
+            self.DrawShape(shape)
+
     def DrawAxes(self):
 
         for axis in self.axes:
@@ -176,27 +200,9 @@ class Renderer:
                     self.DrawDashedLine(color, startPoint, endPoint, 10)
                 else:
 
-                    pg.draw.line(self.screen, color, startPoint, endPoint, 5)
-                    
+                    pg.draw.line(self.screen, color, startPoint, endPoint, 5)    
         
         self.DrawPoint(pg.Color('black'), self.ORIGIN)
-
-    def DrawShape(self, shape):
-
-        for edge in shape.edges:
-            startPoint = (shape.vertices[edge[0]][0] + self.ORIGIN[0], shape.vertices[edge[0]][1] + self.ORIGIN[1])
-            endPoint   = (shape.vertices[edge[1]][0] + self.ORIGIN[0], shape.vertices[edge[1]][1] + self.ORIGIN[1])
-
-            pg.draw.line(self.screen, pg.Color('white'), startPoint, endPoint, 5)
-
-            self.DrawPoint(pg.Color('black'), startPoint)
-            self.DrawPoint(pg.Color('black'), endPoint)
-
-    def DrawShapes(self):
-
-        for shape in self.shapes:
-            
-            self.DrawShape(shape)
 
     def HandleInput(self):
 
@@ -204,22 +210,22 @@ class Renderer:
             self.shapes = self.PlatonicSolids()
             self.axes   = self.Axes() 
 
-        xAxis = (1,0,0)
-        yAxis = (0,1,0)
-        zAxis = (0,0,1)
+        xAxis = self.axes[0].vertices[2]
+        yAxis = self.axes[1].vertices[2]
+        zAxis = self.axes[2].vertices[2]
 
         if self.keys[pg.K_LEFT]:
-            self.TranslateShapes(xAxis, -self.speed)  # TRANSLATE
+            self.TranslateShapes(xAxis, self.speed)
         if self.keys[pg.K_RIGHT]:
-            self.TranslateShapes(xAxis,  self.speed)
+            self.TranslateShapes(xAxis, self.speed)
         if self.keys[pg.K_DOWN]:
-            self.TranslateShapes(yAxis,  self.speed)
+            self.TranslateShapes(yAxis, self.speed)
         if self.keys[pg.K_UP]:
-            self.TranslateShapes(yAxis, -self.speed)
+            self.TranslateShapes(yAxis, self.speed)
         if self.keys[pg.K_PAGEUP]:
-            self.TranslateShapes(zAxis, -self.speed)
+            self.TranslateShapes(zAxis, self.speed)
         if self.keys[pg.K_PAGEDOWN]:
-            self.TranslateShapes(zAxis,  self.speed)
+            self.TranslateShapes(zAxis, self.speed)
 
         if not self.keys[pg.K_LSHIFT]:
             if self.keys[pg.K_s]:
@@ -277,9 +283,9 @@ class Renderer:
         self.clock.tick(self.FPS)
 
     def Run(self):
-        
+
         while True:
-            
+
             self.ClearScreen()
 
             self.DrawAxes()
@@ -287,4 +293,3 @@ class Renderer:
 
             self.Update()
             self.HandleEvents()
-
