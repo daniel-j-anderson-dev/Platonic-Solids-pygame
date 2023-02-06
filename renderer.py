@@ -19,6 +19,7 @@ class Renderer:
         self.axes             = self.Axes()
         self.speed            = 5
         self.angle            = 1
+        self.cameraPosition   = [0, 0, 0]
 
     def Axes(self):
         if self.window_width > self.window_height:
@@ -29,6 +30,8 @@ class Renderer:
 
             return [shape3d.xAxis(self.window_height), shape3d.yAxis(self.window_height), shape3d.zAxis(self.window_height)]
 
+    # I need to change this so that the shape position is relative to the axis not the screen
+    # when 1 is pressed
     def PlatonicSolids(self):
 
         return [shape3d.Cube        ([-450, -150, 0]),
@@ -39,9 +42,11 @@ class Renderer:
 
     def RotatePoint(self, point, axis, angle):
         
-        rotation      = quaternion.Quaternion(axis, angle)
-        original      = quaternion.Quaternion(point[0], point[1], point[2])
-        product       = rotation * original * rotation.inverse()
+        norm         = math.sqrt(axis[0]*axis[0] + axis[1]*axis[1] + axis[2]*axis[2])
+        newAxis      = [axis[0]/norm, axis[1]/norm, axis[2]/norm]
+        rotation     = quaternion.Quaternion(newAxis, angle)
+        original     = quaternion.Quaternion(point[0], point[1], point[2])
+        product      = rotation * original * rotation.inverse()
         rotatedPoint = [product.x, product.y, product.z]
         return rotatedPoint
 
@@ -91,27 +96,23 @@ class Renderer:
 
             shape.vertices = self.RotateShapeLocal(shape, axis, angle)
 
-    # Why cant this be used by TranslateShape????
     def TranslatePoint(self, point, axis, distance):
 
-        norm            = math.sqrt(axis[0]*axis[0] + axis[1]*axis[1] + axis[2]*axis[2])
-        newAxis         = [distance*(axis[0]/norm), distance*(axis[1]/norm), distance*(axis[2]/norm)]
-        translatedPoint = [point[0] + newAxis[0], point[1] + newAxis[1], point[2] + newAxis[2]]
+        norm                = math.sqrt(axis[0]*axis[0] + axis[1]*axis[1] + axis[2]*axis[2])
+        newAxis             = [distance*(axis[0]/norm), distance*(axis[1]/norm), distance*(axis[2]/norm)]
+        translatedPoint     = point
+        translatedPoint[0] += newAxis[0]
+        translatedPoint[1] += newAxis[1]
+        translatedPoint[2] += newAxis[2]
         return translatedPoint
         
-    def TranslateShape(self, shape, axis, distance):     # 0 = x, 1 = y, 2 = z
+    def TranslateShape(self, shape, axis, distance):
 
-        norm               = math.sqrt(axis[0]*axis[0] + axis[1]*axis[1] + axis[2]*axis[2])
-        newAxis            = [distance*(axis[0]/norm), distance*(axis[1]/norm), distance*(axis[2]/norm)]
-        shape.position[0] += newAxis[0]
-        shape.position[1] += newAxis[1]
-        shape.position[2] += newAxis[2]
+        shape.position = self.TranslatePoint(shape.position, axis, distance)
 
         for vertex in shape.vertices:
 
-            vertex[0] += newAxis[0]
-            vertex[1] += newAxis[1]
-            vertex[2] += newAxis[2]
+            vertex = self.TranslatePoint(vertex, axis, distance)
 
     def TranslateShapes(self, axis, distance):
         
@@ -142,9 +143,9 @@ class Renderer:
         # From chatgpt
         squareSize = 24
 
-        for row in range(0, self.screen.get_height(), squareSize):
+        for row in range(0, self.window_height, squareSize):
 
-            for col in range(0, self.screen.get_width(), squareSize):
+            for col in range(0, self.window_width, squareSize):
 
                 if (row + col) % (2 * squareSize) < squareSize:
 
@@ -172,6 +173,7 @@ class Renderer:
         edgeColor   = pg.Color('white')
         vertexColor = pg.Color('black')
         for edge in shape.edges:
+
             startPoint = (shape.vertices[edge[0]][0] + self.ORIGIN[0], shape.vertices[edge[0]][1] + self.ORIGIN[1])
             endPoint   = (shape.vertices[edge[1]][0] + self.ORIGIN[0], shape.vertices[edge[1]][1] + self.ORIGIN[1])
 
@@ -212,11 +214,14 @@ class Renderer:
 
         if self.keys[pg.K_0]:
             self.shapes = self.PlatonicSolids()
-            self.axes   = self.Axes() 
+            self.axes   = self.Axes()
+        if self.keys[pg.K_1]:
+            self.shapes = self.PlatonicSolids()
 
         xAxis = self.axes[0].vertices[2]
         yAxis = self.axes[1].vertices[2]
         zAxis = self.axes[2].vertices[2]
+        sumAxis = [xAxis[0]+yAxis[0]+zAxis[0], xAxis[1]+yAxis[1]+zAxis[1], xAxis[2]+yAxis[2]+zAxis[2]]
 
         if self.keys[pg.K_LEFT]:
             self.TranslateShapes(xAxis, -self.speed)
@@ -231,14 +236,15 @@ class Renderer:
         if self.keys[pg.K_PAGEDOWN]:
             self.TranslateShapes(zAxis, -self.speed)
 
-        if not self.keys[pg.K_LSHIFT]:
+        # Rotate shapes relative to themselves
+        if not (self.keys[pg.K_LSHIFT] or self.keys[pg.K_LCTRL]):
             if self.keys[pg.K_s]:
                 self.RotateShapesLocal((1, 0, 0), -self.angle)
             if self.keys[pg.K_w]:
                 self.RotateShapesLocal((1, 0, 0),  self.angle)
-            if self.keys[pg.K_d]:
-                self.RotateShapesLocal((0, 1, 0), -self.angle)
             if self.keys[pg.K_a]:
+                self.RotateShapesLocal((0, 1, 0), -self.angle)
+            if self.keys[pg.K_d]:
                 self.RotateShapesLocal((0, 1, 0),  self.angle)
             if self.keys[pg.K_e]:
                 self.RotateShapesLocal((0, 0, 1), -self.angle)
@@ -247,7 +253,25 @@ class Renderer:
             if self.keys[pg.K_SPACE]:
                 self.RotateShapesLocal((1, 1, 1), 1)
 
-        else:
+        # Rotate shapes relative to self.axes
+        if self.keys[pg.K_LSHIFT]:
+            if self.keys[pg.K_w]:
+                self.RotateShapesAboutPoint((0, 0, 0), xAxis, -self.angle)
+            if self.keys[pg.K_s]:
+                self.RotateShapesAboutPoint((0, 0, 0), xAxis,  self.angle)
+            if self.keys[pg.K_d]:
+                self.RotateShapesAboutPoint((0, 0, 0), yAxis, -self.angle)
+            if self.keys[pg.K_a]:
+                self.RotateShapesAboutPoint((0, 0, 0), yAxis,  self.angle)
+            if self.keys[pg.K_q]:
+                self.RotateShapesAboutPoint((0, 0, 0), zAxis, -self.angle)
+            if self.keys[pg.K_e]:
+                self.RotateShapesAboutPoint((0, 0, 0), zAxis,  self.angle)
+            if self.keys[pg.K_SPACE]:
+                self.RotateShapesAboutPoint((0, 0, 0), sumAxis, 1)
+
+        # Rotate entire world relative to screen
+        if self.keys[pg.K_LCTRL]:
             if self.keys[pg.K_w]:
                 self.RotateShapesAboutPoint((0, 0, 0), (1, 0, 0), -self.angle)
                 self.RotateAxes((1, 0, 0), -self.angle)
@@ -268,7 +292,7 @@ class Renderer:
                 self.RotateAxes((0, 0, 1),  self.angle)
             if self.keys[pg.K_SPACE]:
                 self.RotateShapesAboutPoint((0, 0, 0), (1, -1, 1), 1)
-                self.RotateAxes((1, -1, 1), 1)
+                self.RotateAxes((1, -1, 1), 1)                
 
     def HandleEvents(self):
 

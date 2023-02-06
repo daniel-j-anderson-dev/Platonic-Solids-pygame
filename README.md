@@ -17,7 +17,8 @@ z-axis is blue
 
 controls:
 
-    lshift:     All rotations will be about screen axes while held
+    lshift:     wasdqe rotate the whole world while held
+    lctrl:      wasdqe rotate the shapes about the axis when held
 
     w/s:        controls x-axis rotation
     a/d:        controls y-axis rotation
@@ -28,4 +29,5 @@ controls:
     left/right: controls position relative to y-axis
     PgUp/PGDwn: controls position relative to z-axis
 
-    0:          resets all shape positions and rotations
+    0:          resets worl
+    1:          resets shape positions/orientation but not world rotation
