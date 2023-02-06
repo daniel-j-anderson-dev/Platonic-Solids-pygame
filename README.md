@@ -10,22 +10,22 @@ edges are pairs vertex indices
 
 All solids are controlled together
 
-negative half axis is dashed
+positive half axis is dashed
 x-axis is red
 y-axis is green
 z-axis is blue
 
 controls:
 
-    lshift:     All rotations will be about global axes while held
+    lshift:     All rotations will be about screen axes while held
 
     w/s:        controls x-axis rotation
     a/d:        controls y-axis rotation
     q/e:        controls z-axis rotation
     space:      rotates in all three axes while held
 
-    up/down:    controls y position
-    left/right: controls x position
-    PgUp/PGDwn: controls z position
+    up/down:    controls position relative to x-axis
+    left/right: controls position relative to y-axis
+    PgUp/PGDwn: controls position relative to z-axis
 
     0:          resets all shape positions and rotations

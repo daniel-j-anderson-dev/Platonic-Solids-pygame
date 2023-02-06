@@ -84,7 +84,6 @@ class Dodecahedron(Shape3D):
             vertex[2] += position[2]
         super().__init__(vertices, edges, "Dodecahedron", position)
 
-
 class Icosahedron(Shape3D):
     def __init__(self, position):
         vertices = [[ 0,      SCALE,  SMULTP], [0,      SCALE,  -SMULTP], [ 0,     -SCALE,  SMULTP], [0,      -SCALE, -SMULTP],

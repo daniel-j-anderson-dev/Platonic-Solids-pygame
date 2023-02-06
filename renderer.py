@@ -41,7 +41,7 @@ class Renderer:
         
         rotation      = quaternion.Quaternion(axis, angle)
         original      = quaternion.Quaternion(point[0], point[1], point[2])
-        product       = rotation.inverse() * original * rotation
+        product       = rotation * original * rotation.inverse()
         rotatedPoint = [product.x, product.y, product.z]
         return rotatedPoint
 
@@ -91,7 +91,7 @@ class Renderer:
 
             shape.vertices = self.RotateShapeLocal(shape, axis, angle)
 
-    # Make this relative to axis not relative to screen
+    # Why cant this be used by TranslateShape????
     def TranslatePoint(self, point, axis, distance):
 
         norm            = math.sqrt(axis[0]*axis[0] + axis[1]*axis[1] + axis[2]*axis[2])
@@ -101,12 +101,17 @@ class Renderer:
         
     def TranslateShape(self, shape, axis, distance):     # 0 = x, 1 = y, 2 = z
 
-
-        shape.position = self.TranslatePoint(shape.position, axis, distance)
+        norm               = math.sqrt(axis[0]*axis[0] + axis[1]*axis[1] + axis[2]*axis[2])
+        newAxis            = [distance*(axis[0]/norm), distance*(axis[1]/norm), distance*(axis[2]/norm)]
+        shape.position[0] += newAxis[0]
+        shape.position[1] += newAxis[1]
+        shape.position[2] += newAxis[2]
 
         for vertex in shape.vertices:
 
-            vertex = self.TranslatePoint(vertex, axis, distance)
+            vertex[0] += newAxis[0]
+            vertex[1] += newAxis[1]
+            vertex[2] += newAxis[2]
 
     def TranslateShapes(self, axis, distance):
         
@@ -118,8 +123,7 @@ class Renderer:
 
         # # From chatgpt
         segments = []
-        distance = math.sqrt(startPoint[0] * startPoint[0] + 
-                             startPoint[1] * startPoint[1])
+        distance = math.sqrt(startPoint[0] * startPoint[0] + startPoint[1] * startPoint[1])
 
         numSegments = int(distance / dashLength)
 
@@ -215,17 +219,17 @@ class Renderer:
         zAxis = self.axes[2].vertices[2]
 
         if self.keys[pg.K_LEFT]:
-            self.TranslateShapes(xAxis, self.speed)
+            self.TranslateShapes(xAxis, -self.speed)
         if self.keys[pg.K_RIGHT]:
-            self.TranslateShapes(xAxis, self.speed)
+            self.TranslateShapes(xAxis,  self.speed)
         if self.keys[pg.K_DOWN]:
-            self.TranslateShapes(yAxis, self.speed)
+            self.TranslateShapes(yAxis,  self.speed)
         if self.keys[pg.K_UP]:
-            self.TranslateShapes(yAxis, self.speed)
+            self.TranslateShapes(yAxis, -self.speed)
         if self.keys[pg.K_PAGEUP]:
-            self.TranslateShapes(zAxis, self.speed)
+            self.TranslateShapes(zAxis,  self.speed)
         if self.keys[pg.K_PAGEDOWN]:
-            self.TranslateShapes(zAxis, self.speed)
+            self.TranslateShapes(zAxis, -self.speed)
 
         if not self.keys[pg.K_LSHIFT]:
             if self.keys[pg.K_s]:
