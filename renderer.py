@@ -20,53 +20,51 @@ class Renderer:
         self.worldOrientation = quaternion.Quaternion((0, 0, 1), 360)
 
     def Axes(self):
-        return [shape3d.xAxis(self.ORIGIN),
-                shape3d.yAxis(self.ORIGIN),
-                shape3d.zAxis(self.ORIGIN)]
+        return [shape3d.xAxis(), shape3d.yAxis(), shape3d.zAxis()]
 
-    def Platonic_Solids(self):
+    def PlatonicSolids(self):
 
-        return [shape3d.Cube        ([-450 + self.ORIGIN[0], -150 + self.ORIGIN[1], 0]),
-                shape3d.Tetrahedron ([-450 + self.ORIGIN[0],  150 + self.ORIGIN[1], 0]),
-                shape3d.Dodecahedron([   0 + self.ORIGIN[0],    0 + self.ORIGIN[1], 0]),
-                shape3d.Icosahedron ([ 450 + self.ORIGIN[0], -150 + self.ORIGIN[1], 0]),
-                shape3d.Octahedron  ([ 450 + self.ORIGIN[0],  150 + self.ORIGIN[1], 0])]
+        return [shape3d.Cube        ([-450, -150, 0]),
+                shape3d.Tetrahedron ([-450,  150, 0]),
+                shape3d.Dodecahedron([   0,    0, 0]),
+                shape3d.Icosahedron ([ 450, -150, 0]),
+                shape3d.Octahedron  ([ 450,  150, 0])]
 
     def RotatePoint(self, point, axis, angle):
         
         rotation      = quaternion.Quaternion(axis, angle)
         original      = quaternion.Quaternion(point[0], point[1], point[2])
         product       = rotation.inverse() * original * rotation
-        rotated_point = [product.x, product.y, product.z]
-        return rotated_point
+        rotatedPoint = [product.x, product.y, product.z]
+        return rotatedPoint
 
     def RotatePointAboutAnother(self, point, centerOfRotation, axis, angle):
 
         difference    = [point[0] - centerOfRotation[0], point[1] - centerOfRotation[1], point[2] - centerOfRotation[2]]
-        rotated_point = self.RotatePoint(difference, axis, angle)
-        sum           = [rotated_point[0] + centerOfRotation[0], rotated_point[1] + centerOfRotation[1], rotated_point[2] + centerOfRotation[2]]
+        rotatedPoint = self.RotatePoint(difference, axis, angle)
+        sum           = [rotatedPoint[0] + centerOfRotation[0], rotatedPoint[1] + centerOfRotation[1], rotatedPoint[2] + centerOfRotation[2]]
         return sum
 
     def RotateShapeLocal(self, shape, axis, angle):
 
-        rotated_vertices = []
+        rotatedVertices = []
         for vertex in shape.vertices:
             
-            rotated_vertex = self.RotatePointAboutAnother(vertex, shape.position, axis, angle)
-            rotated_vertices.append(rotated_vertex) 
+            rotatedVertex = self.RotatePointAboutAnother(vertex, shape.position, axis, angle)
+            rotatedVertices.append(rotatedVertex) 
 
-        return rotated_vertices
+        return rotatedVertices
 
     def RotateShapeAboutPoint(self, shape, centerOfRotation, axis, angle):
 
-        rotated_vertices = []
+        rotatedVertices = []
         for vertex in shape.vertices:
 
-            rotated_vertex = self.RotatePointAboutAnother(vertex, centerOfRotation, axis, angle)
-            rotated_vertices.append(rotated_vertex)
+            rotatedVertex = self.RotatePointAboutAnother(vertex, centerOfRotation, axis, angle)
+            rotatedVertices.append(rotatedVertex)
 
         shape.position = self.RotatePointAboutAnother(shape.position, centerOfRotation, axis, angle)
-        return rotated_vertices
+        return rotatedVertices
 
     def RotateShapesLocal(self, axis, angle):
 
@@ -86,29 +84,28 @@ class Renderer:
 
             shape.vertices = self.RotateShapeLocal(shape, axis, angle)
 
-    def MoveShapeX(self):
-
-        for shape in self.shapes:
-
-            self.axes[0].vertices[0]
-
     # Make this relative to axis not relative to screen
+    def TranslatPoint(self, point, axis):
+
+        _X_ = axis[0]
+        _Y_ = axis[1]
+        _Z_ = axis[2]
+        x   = point[0]
+        y   = point[1]
+        z   = point[2]
+        
     def TranslateShape(self, shape, axis, distance):     # 0 = x, 1 = y, 2 = z
         
-        norm = math.sqrt(axis[0]*axis[0] + axis[1]*axis[1] + axis[1]*axis[1])
+        norm = math.sqrt(axis[0]*axis[0] + axis[1]*axis[1] + axis[2]*axis[2])
         newAxis = [(axis[0]/norm)*distance,
                    (axis[1]/norm)*distance,
                    (axis[2]/norm)*distance]
 
-        shape.position[0] += newAxis[0]
-        shape.position[1] += newAxis[1]
-        shape.position[2] += newAxis[2]
+        shape.position = self.TranslatPoint(shape.position, newAxis)
 
         for vertex in shape.vertices:
 
-            vertex[0] += newAxis[0]
-            vertex[1] += newAxis[1]
-            vertex[2] += newAxis[2]
+            vertex = self.TranslatPoint(vertex, newAxis)
 
     def TranslateShapes(self, axis, distance):
         
@@ -122,6 +119,7 @@ class Renderer:
 
     def DrawDashedLine(self, color, startPoint, endPoint, dashLength):
 
+        # # From chatgpt
         segments = []
         distance = math.sqrt(startPoint[0] * startPoint[0] + 
                              startPoint[1] * startPoint[1])
@@ -139,14 +137,15 @@ class Renderer:
 
     def ClearScreen(self):
 
-        square_size = 24
+        # self.screen.fill(pg.Color('white'))
+        # From chatgpt
+        squareSize = 24
 
-        # Fill the screen with the checkerboard pattern
-        for row in range(0, self.screen.get_height(), square_size):
+        for row in range(0, self.screen.get_height(), squareSize):
 
-            for col in range(0, self.screen.get_width(), square_size):
+            for col in range(0, self.screen.get_width(), squareSize):
 
-                if (row + col) % (2 * square_size) < square_size:
+                if (row + col) % (2 * squareSize) < squareSize:
 
                     color = pg.Color('darkgray')
 
@@ -154,8 +153,7 @@ class Renderer:
 
                     color = pg.Color('gray')
 
-                # self.screen.fill(pg.Color('white'))
-                pg.draw.rect(self.screen, color, pg.Rect(col, row, square_size, square_size))
+                pg.draw.rect(self.screen, color, pg.Rect(col, row, squareSize, squareSize))
 
     def DrawAxes(self):
 
@@ -170,8 +168,8 @@ class Renderer:
 
             for edge in axis.edges:
 
-                startPoint = (axis.vertices[edge[0]][0], axis.vertices[edge[0]][1])
-                endPoint   = (axis.vertices[edge[1]][0], axis.vertices[edge[1]][1])
+                startPoint = (axis.vertices[edge[0]][0] + self.ORIGIN[0], axis.vertices[edge[0]][1] + self.ORIGIN[1])
+                endPoint   = (axis.vertices[edge[1]][0] + self.ORIGIN[0], axis.vertices[edge[1]][1] + self.ORIGIN[1])
 
                 if edge[1] == 2:
                     
@@ -186,8 +184,8 @@ class Renderer:
     def DrawShape(self, shape):
 
         for edge in shape.edges:
-            startPoint = (shape.vertices[edge[0]][0], shape.vertices[edge[0]][1])
-            endPoint   = (shape.vertices[edge[1]][0], shape.vertices[edge[1]][1])
+            startPoint = (shape.vertices[edge[0]][0] + self.ORIGIN[0], shape.vertices[edge[0]][1] + self.ORIGIN[1])
+            endPoint   = (shape.vertices[edge[1]][0] + self.ORIGIN[0], shape.vertices[edge[1]][1] + self.ORIGIN[1])
 
             pg.draw.line(self.screen, pg.Color('white'), startPoint, endPoint, 5)
 
@@ -203,7 +201,7 @@ class Renderer:
     def HandleInput(self):
 
         if self.keys[pg.K_0]:
-            self.shapes = self.Platonic_Solids()
+            self.shapes = self.PlatonicSolids()
             self.axes   = self.Axes() 
 
         xAxis = (1,0,0)
@@ -241,25 +239,25 @@ class Renderer:
 
         else:
             if self.keys[pg.K_w]:
-                self.RotateShapesAboutPoint(self.ORIGIN, (1, 0, 0), -self.angle)
+                self.RotateShapesAboutPoint((0, 0, 0), (1, 0, 0), -self.angle)
                 self.RotateAxes((1, 0, 0), -self.angle)
             if self.keys[pg.K_s]:
-                self.RotateShapesAboutPoint(self.ORIGIN, (1, 0, 0),  self.angle)
+                self.RotateShapesAboutPoint((0, 0, 0), (1, 0, 0),  self.angle)
                 self.RotateAxes((1, 0, 0), self.angle)
             if self.keys[pg.K_d]:
-                self.RotateShapesAboutPoint(self.ORIGIN, (0, 1, 0), -self.angle)
+                self.RotateShapesAboutPoint((0, 0, 0), (0, 1, 0), -self.angle)
                 self.RotateAxes((0, 1, 0), -self.angle)
             if self.keys[pg.K_a]:
-                self.RotateShapesAboutPoint(self.ORIGIN, (0, 1, 0),  self.angle)
+                self.RotateShapesAboutPoint((0, 0, 0), (0, 1, 0),  self.angle)
                 self.RotateAxes((0, 1, 0),  self.angle)
             if self.keys[pg.K_q]:
-                self.RotateShapesAboutPoint(self.ORIGIN, (0, 0, 1), -self.angle)
+                self.RotateShapesAboutPoint((0, 0, 0), (0, 0, 1), -self.angle)
                 self.RotateAxes((0, 0, 1), -self.angle)
             if self.keys[pg.K_e]:
-                self.RotateShapesAboutPoint(self.ORIGIN, (0, 0, 1),  self.angle)
+                self.RotateShapesAboutPoint((0, 0, 0), (0, 0, 1),  self.angle)
                 self.RotateAxes((0, 0, 1),  self.angle)
             if self.keys[pg.K_SPACE]:
-                self.RotateShapesAboutPoint(self.ORIGIN, (1, -1, 1), 1)
+                self.RotateShapesAboutPoint((0, 0, 0), (1, -1, 1), 1)
                 self.RotateAxes((1, -1, 1), 1)
 
     def HandleEvents(self):

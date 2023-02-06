@@ -9,34 +9,25 @@ class Shape3D:
         self.name = name
 
 class xAxis(Shape3D):
-    def __init__(self, ORIGIN):
-        if ORIGIN[0] >= ORIGIN[1]:
-            scale = ORIGIN[0]
-        else:
-            scale = ORIGIN[1]
-        verticies = [[-scale + ORIGIN[0], ORIGIN[1], 0], [ORIGIN[0], ORIGIN[1], ORIGIN[2]], [scale + ORIGIN[0], ORIGIN[1], 0]]
+    def __init__(self):
+
+        verticies = [[-1920, 0, 0], [0, 0, 0], [1920, 0, 0]]
         edges = [[0, 1], [1, 2]]
-        super().__init__(verticies, edges, "xAxis", ORIGIN)
+        super().__init__(verticies, edges, "xAxis", position=(0,0,0))
 
 class yAxis(Shape3D):
-    def __init__(self, ORIGIN):
-        if ORIGIN[0] >= ORIGIN[1]:
-            scale = ORIGIN[0]
-        else:
-            scale = ORIGIN[1]
-        verticies = [[ORIGIN[0], -scale + ORIGIN[1], 0], [ORIGIN[0], ORIGIN[1], ORIGIN[2]], [ORIGIN[0], scale + ORIGIN[1], 0]]
+    def __init__(self):
+
+        verticies = [[0, -1920, 0], [0, 0, 0], [0, 1920, 0]]
         edges = [[0, 1], [1, 2]]
-        super().__init__(verticies, edges, "yAxis", ORIGIN)
+        super().__init__(verticies, edges, "yAxis", position=(0,0,0))
 
 class zAxis(Shape3D):
-    def __init__(self, ORIGIN):
-        if ORIGIN[0] >= ORIGIN[1]:
-            scale = ORIGIN[0]
-        else:
-            scale = ORIGIN[1]
-        verticies = [[ORIGIN[0], ORIGIN[1], -scale], [ORIGIN[0], ORIGIN[1], ORIGIN[2]], [ORIGIN[0], ORIGIN[1], scale]]
+    def __init__(self):
+
+        verticies = [[0, 0, -1920], [0, 0, 0], [0, 0, 1920]]
         edges = [[0, 1], [1, 2]]
-        super().__init__(verticies, edges, "zAxis", ORIGIN)
+        super().__init__(verticies, edges, "zAxis", position=(0,0,0))
 
 class Tetrahedron(Shape3D):
     def __init__(self, position):
@@ -48,7 +39,6 @@ class Tetrahedron(Shape3D):
                 vertex[1] += position[1]
                 vertex[2] += position[2]
         super().__init__(vertices, edges, "Tetrahedron", position)
-
 
 class Cube(Shape3D):
     def __init__(self, position):
